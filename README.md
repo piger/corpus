@@ -8,8 +8,7 @@ An example command-line tool is provided, which will let you index and search a 
 Building
 --------
 
-This software uses the [golucy](https://github.com/philipsoutham/golucy) Go wrappers for
-Lucy, which have only been tested successfully against a specific Lucy version. To simplify the build process, we've provided the `install-lucy` script. Use it this way (once you have downloaded the `corpus` code in the appropriate location in your GOPATH):
+This software uses the [golucy](https://github.com/philipsoutham/golucy) Go wrappers for Lucy, which have only been tested successfully against a specific Lucy version. To simplify the build process, we've provided the `install-lucy` script. Use it this way (once you have downloaded the `corpus` code in the appropriate location in your GOPATH):
 
     $ ./install-lucy /usr/local/lucy
     $ CGO_LDFLAGS='-L/usr/local/lucy/lib -llucy -lcfish'
