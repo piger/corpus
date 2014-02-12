@@ -1,21 +1,15 @@
 corpus
 ======
 
-Sample implementation of a small, self-contained search engine, built
-using [Apache Lucy](http://lucy.apache.org/).
+Sample implementation of a small, self-contained search engine, built using [Apache Lucy](http://lucy.apache.org/).
 
-An example command-line tool is provided, which will let you index
-and search a collection of text files.
+An example command-line tool is provided, which will let you index and search a collection of text files.
 
 Building
 --------
 
-This software uses the
-[golucy](https://github.com/philipsoutham/golucy) Go wrappers for
-Lucy, which have only been tested successfully against a specific Lucy
-version. To simplify the build process, we've provided the
-`install-lucy` script. Use it this way (once you have downloaded the
-`corpus` code in the appropriate location in your GOPATH):
+This software uses the [golucy](https://github.com/philipsoutham/golucy) Go wrappers for
+Lucy, which have only been tested successfully against a specific Lucy version. To simplify the build process, we've provided the `install-lucy` script. Use it this way (once you have downloaded the `corpus` code in the appropriate location in your GOPATH):
 
     $ ./install-lucy /usr/local/lucy
     $ CGO_LDFLAGS='-L/usr/local/lucy/lib -llucy -lcfish'
