@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# This script will install Apache Lucy in an isolated directory, so
+# that it is available in order to build the 'golucy' wrapper.
+#
+
+DESTDIR="${1:-/usr/local/lucy}"
+
+msg() {
+  echo "[*] $*" 1>&2
+}
+
+set -e
+
+# Create a temporary directory to build sources in.
+temp_dir=$(mktemp -d)
+trap "rm -fr ${temp_dir} ; trap - EXIT ; exit 0" EXIT INT TERM
+
+# Download and install Lucy (from git).
+msg "Downloading Lucy sources"
+(cd ${temp_dir} ; \
+ git clone https://git-wip-us.apache.org/repos/asf/lucy.git ; \
+ cd lucy ; \
+ git checkout e19687f9a6b0158308ac7bcafc663296635b107a)
+msg "Building Lucy"
+(cd ${temp_dir}/lucy/c && \
+ ./configure --prefix=${DESTDIR} && \
+ make && make test && make install && \
+ ./install --prefix ${DESTDIR})
+(cd ${temp_dir}/lucy/clownfish/runtime/c && \
+ ./configure --prefix=${DESTDIR} && \
+ make && make test && make install && \
+ ./install --prefix ${DESTDIR})
+
+# Print out a helpful message.
+cat <<EOF
+
+Apache Lucy has been installed in ${DESTDIR}.
+To build Golucy and other programs, remember to set:
+
+CGO_LDFLAGS="-L${DESTDIR}/lib -llucy -lcfish"
+CGO_CFLAGS="-I${DESTDIR}/include"
+LD_LIBRARY_PATH="${DESTDIR}/lib"
+
+EOF
+
+exit 0
