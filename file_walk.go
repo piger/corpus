@@ -41,22 +41,22 @@ func (w *Walker) matches(path string, info os.FileInfo) bool {
 
 func (w *Walker) Walk(root string, walkFn filepath.WalkFunc) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err == nil {
-			if info.IsDir() {
-				// Only prune directories if they are
-				// excluded.
-				if matchAny(filepath.Base(path), w.Exclude) {
-					return filepath.SkipDir
-				}
-				return nil
+		if info.IsDir() {
+			// Only prune directories if they are
+			// excluded. But don't skip the root
+			// directory, even if it matches an exclude
+			// pattern (think ".").
+			if path != root && matchAny(filepath.Base(path), w.Exclude) {
+				return filepath.SkipDir
 			}
-			if !w.matches(filepath.Base(path), info) {
-				return nil
-			}
+			return nil
+		}
+		if !w.matches(filepath.Base(path), info) {
+			return nil
+		}
 
-			if !info.Mode().IsRegular() {
-				return nil
-			}
+		if !info.Mode().IsRegular() {
+			return nil
 		}
 
 		walkFn(path, info, err)
