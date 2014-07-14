@@ -13,13 +13,10 @@ type testDoc struct {
 	DocContent string
 }
 
-func (d *testDoc) Id() string      { return d.DocId }
-func (d *testDoc) Title() string   { return d.DocTitle }
-func (d *testDoc) Content() string { return d.DocContent }
-func (d *testDoc) ToJSON() string {
-	data, _ := json.Marshal(d)
-	return string(data)
-}
+func (d *testDoc) Id() string                   { return d.DocId }
+func (d *testDoc) Title() string                { return d.DocTitle }
+func (d *testDoc) Content() string              { return d.DocContent }
+func (d *testDoc) MarshalJSON() ([]byte, error) { return json.Marshal(d.DocId) }
 
 func Test_IndexAndSearch(t *testing.T) {
 	tmpdir, _ := ioutil.TempDir("", "indexer_test_")

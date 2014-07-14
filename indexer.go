@@ -34,13 +34,17 @@ func NewLucyDb(path, language string) *Db {
 	return &Db{schema, index}
 }
 
-func docToLucy(doc Document) golucy.Document {
+func docToLucy(doc Document) (golucy.Document, error) {
+	data, err := doc.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
 	return golucy.Document{
 		"id":      doc.Id(),
 		"title":   doc.Title(),
 		"content": doc.Content(),
-		"data":    doc.ToJSON(),
-	}
+		"data":    string(data),
+	}, nil
 }
 
 func (l *Db) Insert(docs []Document) error {
@@ -49,7 +53,11 @@ func (l *Db) Insert(docs []Document) error {
 
 	lucyDocs := make([]golucy.Document, 0, len(docs))
 	for _, doc := range docs {
-		lucyDocs = append(lucyDocs, docToLucy(doc))
+		ldoc, err := docToLucy(doc)
+		if err != nil {
+			return err
+		}
+		lucyDocs = append(lucyDocs, ldoc)
 	}
 
 	writer.AddDocs(lucyDocs...)

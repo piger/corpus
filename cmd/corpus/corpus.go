@@ -37,11 +37,6 @@ func (s *strslice) Set(value string) error {
 	return nil
 }
 
-func init() {
-	flag.Var(&excludes, "exclude", "Exclude pattern")
-	flag.Var(&includes, "include", "Include pattern")
-}
-
 type FsDoc struct {
 	Path string
 }
@@ -110,6 +105,8 @@ func index(db corpus.Index, args []string) {
 }
 
 func main() {
+	flag.Var(&excludes, "exclude", "Exclude pattern")
+	flag.Var(&includes, "include", "Include pattern")
 	flag.Parse()
 
 	if !*doSearch && !*doIndex {
