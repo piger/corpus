@@ -1,6 +1,8 @@
 package corpus
 
 import (
+	"encoding/json"
+
 	"git.autistici.org/ale/corpus/third_party/golucy"
 )
 
@@ -22,7 +24,7 @@ type Db struct {
 	index  *golucy.Index
 }
 
-func NewLucyDb(path, language string) *Db {
+func New(path, language string) *Db {
 	schema := golucy.NewSchema()
 	schema.AddField(golucy.NewIdField("id"))
 	schema.AddField(golucy.NewFTField("content", language, true))
@@ -35,7 +37,7 @@ func NewLucyDb(path, language string) *Db {
 }
 
 func docToLucy(doc Document) (golucy.Document, error) {
-	data, err := doc.MarshalJSON()
+	data, err := json.Marshal(doc)
 	if err != nil {
 		return nil, err
 	}

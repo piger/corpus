@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"git.autistici.org/ale/corpus"
+	"git.autistici.org/ale/corpus/file"
 )
 
 var (
@@ -20,8 +20,8 @@ var (
 	lang     = flag.String("lang", "en", "Language (for indexing)")
 
 	// Multi-valued flags.
-	includes []string
-	excludes = []string{
+	includes strslice
+	excludes = strslice{
 		".*", "*~", "*.bak",
 	}
 )
@@ -37,28 +37,8 @@ func (s *strslice) Set(value string) error {
 	return nil
 }
 
-type FsDoc struct {
-	Path string
-}
-
-func (d *FsDoc) Id() string    { return d.Path }
-func (d *FsDoc) Title() string { return "" }
-
-func (d *FsDoc) Content() string {
-	data, err := ioutil.ReadFile(d.Path)
-	if err != nil {
-		return ""
-	}
-	return string(data)
-}
-
-func (d *FsDoc) ToJSON() string {
-	data, _ := json.Marshal(d)
-	return string(data)
-}
-
-func DecodeDoc(data string) *FsDoc {
-	var d FsDoc
+func decodeDoc(data string) *file.Document {
+	var d file.Document
 	json.Unmarshal([]byte(data), &d)
 	return &d
 }
@@ -67,7 +47,7 @@ func search(db corpus.Index, args []string) {
 	// Execute query and display results.
 	_, results := db.Search(strings.Join(args, " "), 0, uint(*limit))
 	for _, r := range results {
-		doc := DecodeDoc(r)
+		doc := decodeDoc(r)
 		fmt.Println(doc.Path)
 	}
 }
@@ -83,8 +63,16 @@ func index(db corpus.Index, args []string) {
 
 	// For each argument, process it or recurse if it's a directory.
 	for _, root := range args {
-		err := w.Walk(root, func(path string, info os.FileInfo, err error) error {
-			docs = append(docs, &FsDoc{path})
+		log.Printf("scanning %s ...", root)
+		err := w.Walk(root, func(path string, info os.FileInfo, fileErr error) error {
+			if fileErr == nil {
+				doc, err := file.New(path)
+				if err != nil {
+					log.Printf("%s: %v", path, err)
+				} else {
+					docs = append(docs, doc)
+				}
+			}
 			return nil
 		})
 		if err != nil {
@@ -124,7 +112,7 @@ func main() {
 		log.Fatal("Index directory already exists and is not a directory")
 	}
 
-	db := corpus.NewLucyDb(*dbPath, *lang)
+	db := corpus.New(*dbPath, *lang)
 	defer db.Close()
 
 	if *doIndex {

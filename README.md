@@ -5,8 +5,18 @@ Sample implementation of a small, self-contained search engine, built using [Apa
 
 An example command-line tool is provided, which will let you index and search a collection of text files.
 
-Building
---------
+Dependencies
+------------
+
+Required dependencies:
+
+ * *libmagic* (use ``apt-get install libmagic-dev`` to install it on a
+   Debian system)
+ * *lucy* - we depend on a specific version of this C library, so a
+   script is provided to install it (see below).
+
+Installation
+------------
 
 This software uses the [golucy](https://github.com/philipsoutham/golucy) Go wrappers for Lucy, which have only been tested successfully against a specific Lucy version. To simplify the build process, we've provided the `install-lucy` script. Use it this way (once you have downloaded the `corpus` code in the appropriate location in your GOPATH):
 

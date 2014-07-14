@@ -1,13 +1,13 @@
 package corpus
 
-import "encoding/json"
-
 // A Document is the basic representation of an indexable object.
 // It can have a "title", and some "content", which will be used
 // for indexing with our simple tiny schema.
+//
+// Documents must be JSON-serializable, i.e. either a base type, or an
+// implementation of the json.Marshaler interface (even though this is
+// not explicitly set in this interface due to the "base type" case).
 type Document interface {
-	json.Marshaler
-
 	Id() string
 	Title() string
 	Content() string
