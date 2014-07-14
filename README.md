@@ -13,8 +13,16 @@ Required dependencies:
  * [Go](http://golang.org/)
  * *libmagic* (use ``apt-get install libmagic-dev`` to install it on a
    Debian system)
- * *lucy* - we depend on a specific version of this C library, so a
+ * *Lucy* - we depend on a specific version of this C library, so a
    script is provided to install it (see below).
+
+The default file indexing application uses some external binaries to
+extract text from common file types. These dependencies are optional
+and not required when using the code as a library:
+
+ * *Lynx* to parse HTML
+ * *pdftotext* for PDF files
+
 
 Installation
 ------------
