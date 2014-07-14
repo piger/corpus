@@ -3,7 +3,6 @@ package corpus
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
@@ -30,8 +29,8 @@ func Test_IndexAndSearch(t *testing.T) {
 	defer db.Close()
 
 	if err := db.Insert([]Document{
-		&testDoc{"id1", "title", "one"},
-		&testDoc{"id2", "other title", "two"},
+		&testDoc{"id1", "banana", "one"},
+		&testDoc{"id2", "more banana", "two"},
 		&testDoc{"id3", "", "three"},
 	}); err != nil {
 		t.Fatal(err)
@@ -39,7 +38,11 @@ func Test_IndexAndSearch(t *testing.T) {
 
 	nr, results := db.Search("three", 0, 100)
 	if nr != 1 {
-		t.Fatalf("Found %d results instead of 1", nr)
+		t.Fatalf("Found %d results for 'three' instead of 1: %+v", nr, results)
 	}
-	log.Printf("%+v", results[0])
+
+	nr, results = db.Search("banana", 0, 100)
+	if nr != 2 {
+		t.Fatalf("Found %d results for 'banana' instead of 1: %+v", nr, results)
+	}
 }

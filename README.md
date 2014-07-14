@@ -15,7 +15,7 @@ This software uses the [golucy](https://github.com/philipsoutham/golucy) Go wrap
     $ CGO_CFLAGS=-I/usr/local/lucy/include
     $ LD_LIBRARY_PATH=/usr/local/lucy/lib
     $ export CGO_LDFLAGS CGO_CFLAGS LD_LIBRARY_PATH
-    $ go get github.com/philipsoutham/golucy
     $ go build -v cmd/corpus/corpus.go
 
 This should create the `corpus` tool in the current directory.
+

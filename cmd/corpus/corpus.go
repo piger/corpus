@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"git.autistici.org/ale/corpus"
@@ -19,7 +18,29 @@ var (
 	doIndex  = flag.Bool("index", false, "Index documents")
 	limit    = flag.Int("limit", 20, "Limit number of search results")
 	lang     = flag.String("lang", "en", "Language (for indexing)")
+
+	// Multi-valued flags.
+	includes []string
+	excludes = []string{
+		".*", "*~", "*.bak",
+	}
 )
+
+type strslice []string
+
+func (s *strslice) String() string {
+	return fmt.Sprintf("%v", *s)
+}
+
+func (s *strslice) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
+
+func init() {
+	flag.Var(&excludes, "exclude", "Exclude pattern")
+	flag.Var(&includes, "include", "Include pattern")
+}
 
 type FsDoc struct {
 	Path string
@@ -59,22 +80,20 @@ func search(db corpus.Index, args []string) {
 func index(db corpus.Index, args []string) {
 	docs := make([]corpus.Document, 0)
 
+	w := &corpus.Walker{
+		Exclude: excludes,
+		Include: includes,
+		MinSize: 1024,
+	}
+
 	// For each argument, process it or recurse if it's a directory.
-	for _, path := range args {
-		finfo, err := os.Stat(path)
-		if err != nil {
-			log.Printf("Cannot stat %s: %s", path, err)
-			continue
-		}
-		if finfo.IsDir() {
-			filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-				if finfo.Mode().IsRegular() {
-					docs = append(docs, &FsDoc{path})
-				}
-				return nil
-			})
-		} else if finfo.Mode().IsRegular() {
+	for _, root := range args {
+		err := w.Walk(root, func(path string, info os.FileInfo, err error) error {
 			docs = append(docs, &FsDoc{path})
+			return nil
+		})
+		if err != nil {
+			log.Printf("Cannot scan %s: %s", root, err)
 		}
 	}
 

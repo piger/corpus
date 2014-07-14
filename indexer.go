@@ -1,7 +1,7 @@
 package corpus
 
 import (
-	"github.com/philipsoutham/golucy/v0.0.1"
+	"git.autistici.org/ale/corpus/third_party/golucy"
 )
 
 func NewStoredField(name string) *golucy.Field {
@@ -17,21 +17,21 @@ func NewStoredField(name string) *golucy.Field {
 	}
 }
 
-type LucyDb struct {
+type Db struct {
 	schema *golucy.Schema
 	index  *golucy.Index
 }
 
-func NewLucyDb(path, language string) *LucyDb {
+func NewLucyDb(path, language string) *Db {
 	schema := golucy.NewSchema()
 	schema.AddField(golucy.NewIdField("id"))
-	schema.AddField(golucy.NewFTField("content", language))
-	schema.AddField(golucy.NewFTField("title", language))
+	schema.AddField(golucy.NewFTField("content", language, true))
+	schema.AddField(golucy.NewFTField("title", language, true))
 	schema.AddField(NewStoredField("data"))
 
 	index := golucy.NewIndex(path, true, false, schema)
 
-	return &LucyDb{schema, index}
+	return &Db{schema, index}
 }
 
 func docToLucy(doc Document) golucy.Document {
@@ -43,7 +43,7 @@ func docToLucy(doc Document) golucy.Document {
 	}
 }
 
-func (l *LucyDb) Insert(docs []Document) error {
+func (l *Db) Insert(docs []Document) error {
 	writer := l.index.NewIndexWriter()
 	defer writer.Close()
 
@@ -58,11 +58,11 @@ func (l *LucyDb) Insert(docs []Document) error {
 	return nil
 }
 
-func (l *LucyDb) Search(queryStr string, offset, limit uint) (uint, []string) {
+func (l *Db) Search(queryStr string, offset, limit uint) (uint, []string) {
 	reader := l.index.NewIndexReader()
 	defer reader.Close()
 
-	query := reader.ParseQuery(queryStr)
+	query := reader.ParseQuery(queryStr, true)
 	defer query.Close()
 
 	// Run the query but only return the full object data.
@@ -74,7 +74,7 @@ func (l *LucyDb) Search(queryStr string, offset, limit uint) (uint, []string) {
 	return numResults, out
 }
 
-func (l *LucyDb) Close() {
+func (l *Db) Close() {
 	l.index.Close()
 	l.schema.Close()
 }
