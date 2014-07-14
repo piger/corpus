@@ -74,7 +74,14 @@ func (l *Index) Insert(docs []Document) error {
 }
 
 // An iterator scans through search results, providing a way to
-// deserialize the associated object data.
+// deserialize the associated object data. Use it like this:
+//
+//     _, iter := index.Search("query")
+//     for iter.Next() {
+//             var doc MyType
+//             iter.Value(&doc)
+//     }
+//
 type Iterator struct {
 	pos        int
 	numResults int
