@@ -18,6 +18,7 @@ var (
 	doIndex  = flag.Bool("index", false, "Index documents")
 	limit    = flag.Int("limit", 20, "Limit number of search results")
 	lang     = flag.String("lang", "en", "Language (for indexing)")
+	noScores = flag.Bool("no-score", false, "Hide score in results")
 
 	// Multi-valued flags.
 	includes strslice
@@ -53,7 +54,11 @@ func runSearch(index *corpus.Index, args []string) {
 	for results.Next() {
 		var doc file.Document
 		results.Value(&doc)
-		fmt.Printf(" %-6.4f  %s\n", results.Score(), doc.Path)
+		if *noScores {
+			fmt.Println(doc.Path)
+		} else {
+			fmt.Printf(" %-6.4f  %s\n", results.Score(), doc.Path)
+		}
 	}
 }
 
