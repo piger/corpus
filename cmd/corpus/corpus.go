@@ -43,16 +43,21 @@ func decodeDoc(data string) *file.Document {
 	return &d
 }
 
-func search(db corpus.Index, args []string) {
+func runSearch(index *corpus.Index, args []string) {
 	// Execute query and display results.
-	_, results := db.Search(strings.Join(args, " "), 0, uint(*limit))
-	for _, r := range results {
-		doc := decodeDoc(r)
-		fmt.Println(doc.Path)
+	nr, results := index.Search(strings.Join(args, " "), 0, uint(*limit))
+	if nr == 0 {
+		log.Printf("No results")
+		return
+	}
+	for results.Next() {
+		var doc file.Document
+		results.Value(&doc)
+		fmt.Printf(" %-6.4f  %s\n", results.Score(), doc.Path)
 	}
 }
 
-func index(db corpus.Index, args []string) {
+func runIndex(index *corpus.Index, args []string) {
 	docs := make([]corpus.Document, 0)
 
 	w := &corpus.Walker{
@@ -84,8 +89,8 @@ func index(db corpus.Index, args []string) {
 		log.Fatal("No documents found!")
 	}
 
-	// Now add all documents to the db.
-	if err := db.Insert(docs); err != nil {
+	// Now add all documents to the index.
+	if err := index.Insert(docs); err != nil {
 		log.Fatal(err)
 	}
 
@@ -112,12 +117,12 @@ func main() {
 		log.Fatal("Index directory already exists and is not a directory")
 	}
 
-	db := corpus.New(*dbPath, *lang)
-	defer db.Close()
+	index := corpus.New(*dbPath, *lang)
+	defer index.Close()
 
 	if *doIndex {
-		index(db, flag.Args())
+		runIndex(index, flag.Args())
 	} else {
-		search(db, flag.Args())
+		runSearch(index, flag.Args())
 	}
 }
