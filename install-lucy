@@ -26,11 +26,11 @@ msg "Building Lucy"
 (cd ${temp_dir}/lucy/c && \
  ./configure --prefix=${DESTDIR} && \
  make && make test && make install && \
- ./install --prefix ${DESTDIR})
+ sudo ./install --prefix ${DESTDIR})
 (cd ${temp_dir}/lucy/clownfish/runtime/c && \
  ./configure --prefix=${DESTDIR} && \
  make && make test && make install && \
- ./install --prefix ${DESTDIR})
+ sudo ./install --prefix ${DESTDIR})
 
 # Print out a helpful message.
 cat <<EOF
@@ -41,6 +41,7 @@ To build Golucy and other programs, remember to set:
 CGO_LDFLAGS="-L${DESTDIR}/lib -llucy -lcfish"
 CGO_CFLAGS="-I${DESTDIR}/include"
 LD_LIBRARY_PATH="${DESTDIR}/lib"
+export CGO_LDFLAGS CGO_CFLAGS LD_LIBRARY_PATH
 
 EOF
 
