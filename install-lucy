@@ -21,7 +21,7 @@ msg "Downloading Lucy sources"
 (cd ${temp_dir} ; \
  git clone https://git-wip-us.apache.org/repos/asf/lucy.git ; \
  cd lucy ; \
- git checkout e19687f9a6b0158308ac7bcafc663296635b107a)
+ git checkout 19ce71a3d77c748c85c50dd1620298fc4b77a233)
 msg "Building Lucy"
 (cd ${temp_dir}/lucy/c && \
  ./configure --prefix=${DESTDIR} && \
