@@ -19,6 +19,7 @@ var (
 	limit    = flag.Int("limit", 20, "Limit number of search results")
 	lang     = flag.String("lang", "en", "Language (for indexing)")
 	noScores = flag.Bool("no-score", false, "Hide score in results")
+	highlights = flag.Bool("highlights", false, "Show highlights from search results")
 
 	// Multi-valued flags.
 	includes strslice
@@ -58,6 +59,11 @@ func runSearch(index *corpus.Index, args []string) {
 			fmt.Println(doc.Path)
 		} else {
 			fmt.Printf(" %-6.4f  %s\n", results.Score(), doc.Path)
+			if *highlights {
+				for _, m := range results.MatchedTerms() {
+					fmt.Printf("           %s\n", m)
+				}
+			}
 		}
 	}
 }

@@ -113,7 +113,7 @@ func (l *Index) Search(queryStr string, offset, limit uint) (int, *Iterator) {
 	defer query.Close()
 
 	// Run the query but only return the full object data.
-	numResults, results := reader.Search(query, offset, limit, "id", "data", false)
+	numResults, results := reader.Search(query, offset, limit, "id", "data", true)
 	return int(numResults), &Iterator{-1, int(numResults), results}
 }
 
