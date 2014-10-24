@@ -3,6 +3,7 @@ package corpus
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -20,7 +21,10 @@ func Test_IndexAndSearch(t *testing.T) {
 	tmpdir, _ := ioutil.TempDir("", "indexer_test_")
 	defer os.RemoveAll(tmpdir)
 
-	index := New(tmpdir, "en")
+	index, err := New(filepath.Join(tmpdir, "index"), "en")
+	if err != nil {
+		t.Fatalf("new Index error: %s\n", err)
+	}
 	defer index.Close()
 
 	if err := index.Insert([]Document{
@@ -31,28 +35,28 @@ func Test_IndexAndSearch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nr, results := index.Search("three", 0, 100)
-	if nr != 1 {
-		t.Fatalf("Found %d results for 'three' instead of 1: %+v", nr, results)
+	results, err := index.Search("three", 0, 100)
+	if err != nil {
+		t.Fatalf("Search error: %s\n", err)
+	} else if results.Total != 1 {
+		t.Fatalf("Found %d results for 'three' instead of 1: %+v", results.Total, results)
 	}
-	if !results.Next() {
-		t.Fatal("Result.Next() failed")
-	}
-	var resultdoc testDoc
-	if err := results.Value(&resultdoc); err != nil {
-		t.Fatal("Result.Value(): ", err)
-	}
-	if resultdoc.DocId != "id3" {
-		t.Errorf("bad result id: got=%s, want=id3", resultdoc.DocId)
+	resultdoc := results.Hits[0]
+	if resultdoc.ID != "id3" {
+		t.Errorf("bad result id: got=%s, want=id3", resultdoc.ID)
 	}
 
-	nr, results = index.Search("banana", 0, 100)
-	if nr != 2 {
-		t.Fatalf("Found %d results for 'banana' instead of 1: %+v", nr, results)
+	results, err = index.Search("banana", 0, 100)
+	if err != nil {
+		t.Fatalf("Search error: %s\n", err)
+	} else if results.Total != 2 {
+		t.Fatalf("Found %d results for 'banana' instead of 1: %+v", results.Total, results)
 	}
 
-	nr, results = index.Search("boiler", 0, 100)
-	if nr != 0 {
-		t.Fatalf("Found %d results for 'boiler' instead of none: %+v", nr, results)
+	results, err = index.Search("boiler", 0, 100)
+	if err != nil {
+		t.Fatalf("Search error: %s\n", err)
+	} else if results.Total != 0 {
+		t.Fatalf("Found %d results for 'boiler' instead of none: %+v", results.Total, results)
 	}
 }
