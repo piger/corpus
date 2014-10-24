@@ -3,7 +3,7 @@ package corpus
 import (
 	"encoding/json"
 
-	"git.autistici.org/ale/corpus/third_party/golucy"
+	"github.com/blevesearch/bleve"
 )
 
 // A Document is the basic representation of an indexable object.
@@ -19,121 +19,94 @@ type Document interface {
 	Content() string
 }
 
-// Index holds a Lucy index and an associated schema.
+// Index holds a Bleve index
 type Index struct {
-	schema *golucy.Schema
-	index  *golucy.Index
+	index bleve.Index
 }
 
-// New returns a new index. Indexes are mono-lingual, and their
-// language must be specified at creation time.
-func New(path, language string) *Index {
-	schema := golucy.NewSchema()
-	schema.AddField(golucy.NewIdField("id"))
-	schema.AddField(golucy.NewFTField("content", language, true))
-	schema.AddField(golucy.NewFTField("title", language, true))
-	schema.AddField(newStoredField("data"))
+func buildIndexMapping(language string) *bleve.IndexMapping {
+	txtMapping := bleve.NewTextFieldMapping()
+	txtMapping.Analyzer = language
 
-	index := golucy.NewIndex(path, true, false, schema)
+	storeFieldOnlyMapping := bleve.NewTextFieldMapping()
+	storeFieldOnlyMapping.Index = false
+	storeFieldOnlyMapping.IncludeTermVectors = false
+	storeFieldOnlyMapping.IncludeInAll = false
 
-	return &Index{schema, index}
+	docMapping := bleve.NewDocumentMapping()
+	docMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
+	docMapping.AddFieldMappingsAt("content", txtMapping)
+	docMapping.AddFieldMappingsAt("title", txtMapping)
+	docMapping.AddFieldMappingsAt("data", storeFieldOnlyMapping)
+
+	mapping := bleve.NewIndexMapping()
+	mapping.AddDocumentMapping("doc", docMapping)
+	mapping.DefaultAnalyzer = language
+	return mapping
 }
 
-func docToLucy(doc Document) (golucy.Document, error) {
+func New(path, language string) (*Index, error) {
+	index, err := bleve.Open(path)
+	if err == bleve.ErrorIndexPathDoesNotExist {
+		indexMapping := buildIndexMapping(language)
+		index, err = bleve.New(path, indexMapping)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &Index{index: index}, nil
+}
+
+type BleveDocument struct {
+	Id      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"title"`
+	Data    string `json:"data"`
+}
+
+func (bd *BleveDocument) Type() string {
+	return "doc"
+}
+
+func docToBleve(doc Document) (*BleveDocument, error) {
 	data, err := json.Marshal(doc)
 	if err != nil {
 		return nil, err
 	}
-	return golucy.Document{
-		"id":      doc.Id(),
-		"title":   doc.Title(),
-		"content": doc.Content(),
-		"data":    string(data),
+
+	return &BleveDocument{
+		Id:      doc.Id(),
+		Title:   doc.Title(),
+		Content: doc.Content(),
+		Data:    string(data),
 	}, nil
 }
 
-// Insert adds some documents to the index as a single batch
-// operation.
-func (l *Index) Insert(docs []Document) error {
-	writer := l.index.NewIndexWriter()
-	defer writer.Close()
-
-	lucyDocs := make([]golucy.Document, 0, len(docs))
+func (b *Index) Insert(docs []Document) error {
+	batch := bleve.NewBatch()
 	for _, doc := range docs {
-		ldoc, err := docToLucy(doc)
+		bd, err := docToBleve(doc)
 		if err != nil {
 			return err
 		}
-		lucyDocs = append(lucyDocs, ldoc)
+		batch.Index(bd.Id, bd)
 	}
 
-	writer.AddDocs(lucyDocs...)
-	writer.Commit()
-
-	return nil
+	err := b.index.Batch(batch)
+	return err
 }
 
-// An iterator scans through search results, providing a way to
-// deserialize the associated object data. Use it like this:
-//
-//     _, iter := index.Search("query")
-//     for iter.Next() {
-//             var doc MyType
-//             iter.Value(&doc)
-//     }
-//
-type Iterator struct {
-	pos        int
-	numResults int
-	results    []*golucy.SearchResult
-}
-
-func (i *Iterator) Next() bool {
-	i.pos++
-	return i.pos < i.numResults
-}
-
-func (i *Iterator) Value(obj interface{}) error {
-	return json.Unmarshal([]byte(i.results[i.pos].Text), obj)
-}
-
-func (i *Iterator) Score() float32 {
-	return i.results[i.pos].Score
-}
-
-func (i *Iterator) MatchedTerms() []string {
-	return i.results[i.pos].MatchedTerms
-}
-
-func (l *Index) Search(queryStr string, offset, limit uint) (int, *Iterator) {
-	reader := l.index.NewIndexReader()
-	defer reader.Close()
-
-	query := reader.ParseQuery(queryStr, true)
-	defer query.Close()
-
-	// Run the query but only return the full object data.
-	numResults, results := reader.Search(query, offset, limit, "id", "data", true)
-	return int(numResults), &Iterator{-1, int(numResults), results}
+func (b *Index) Search(queryStr string, offset, limit int) (*bleve.SearchResult, error) {
+	query := bleve.NewQueryStringQuery(queryStr)
+	req := bleve.NewSearchRequestOptions(query, limit, offset, false)
+	req.Highlight = bleve.NewHighlightWithStyle("ansi")
+	return b.index.Search(req)
 }
 
 // Close releases the resources associated with the index.
-func (l *Index) Close() {
-	l.index.Close()
-	l.schema.Close()
-}
-
-// Create a new Lucy field which is stored but not indexed (for the
-// opaque document representation).
-func newStoredField(name string) *golucy.Field {
-	return &golucy.Field{
-		Name:      name,
-		IndexType: golucy.StringType,
-		IndexOptions: &golucy.IndexOptions{
-			Indexed:       false,
-			Stored:        true,
-			Sortable:      false,
-			Highlightable: false,
-		},
-	}
+func (b *Index) Close() {
+	b.index.Close()
 }
