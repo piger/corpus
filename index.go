@@ -19,7 +19,7 @@ type Document interface {
 	Content() string
 }
 
-// Index holds a Lucy index and an associated schema.
+// Index holds a Bleve index
 type Index struct {
 	index bleve.Index
 }
