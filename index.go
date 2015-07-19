@@ -86,7 +86,7 @@ func docToBleve(doc Document) (*BleveDocument, error) {
 }
 
 func (b *Index) Insert(docs []Document) error {
-	batch := bleve.NewBatch()
+	batch := b.index.NewBatch()
 	for _, doc := range docs {
 		bd, err := docToBleve(doc)
 		if err != nil {
