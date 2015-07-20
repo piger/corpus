@@ -92,11 +92,12 @@ func (b *Index) Insert(docs []Document) error {
 		if err != nil {
 			return err
 		}
-		batch.Index(bd.Id, bd)
+		if err := batch.Index(bd.Id, bd); err != nil {
+			return err
+		}
 	}
 
-	err := b.index.Batch(batch)
-	return err
+	return b.index.Batch(batch)
 }
 
 func (b *Index) Search(queryStr string, offset, limit int) (*bleve.SearchResult, error) {
