@@ -89,7 +89,10 @@ type BleveDocument struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 	Data    string `json:"data"`
-	Type    string `json:"_type"`
+
+	// this field was called "Type" but we need
+	// to respect the bleve.Classifier interface!
+	Kind string `json:"_type"`
 }
 
 func docToBleve(doc Document) (*BleveDocument, error) {
@@ -114,7 +117,7 @@ func docToBleve(doc Document) (*BleveDocument, error) {
 		Title:   doc.Title(),
 		Content: doc.Content(),
 		Data:    string(data),
-		Type:    docType,
+		Kind:    docType,
 	}, nil
 }
 
