@@ -69,7 +69,7 @@ var mm *magicmime.Magic
 
 func init() {
 	var err error
-	mm, err = magicmime.New()
+	mm, err = magicmime.New(magicmime.MAGIC_MIME_TYPE | magicmime.MAGIC_ERROR | magicmime.MAGIC_SYMLINK)
 	if err != nil {
 		panic(err)
 	}
