@@ -3,7 +3,9 @@ package corpus
 import (
 	"encoding/json"
 
+	"fmt"
 	"github.com/blevesearch/bleve"
+	"github.com/rainycape/cld2"
 )
 
 // A Document is the basic representation of an indexable object.
@@ -24,31 +26,53 @@ type Index struct {
 	index bleve.Index
 }
 
-func buildIndexMapping(language string) *bleve.IndexMapping {
-	txtMapping := bleve.NewTextFieldMapping()
-	txtMapping.Analyzer = language
+func buildIndexMapping() *bleve.IndexMapping {
+	mapping := bleve.NewIndexMapping()
 
 	storeFieldOnlyMapping := bleve.NewTextFieldMapping()
 	storeFieldOnlyMapping.Index = false
 	storeFieldOnlyMapping.IncludeTermVectors = false
 	storeFieldOnlyMapping.IncludeInAll = false
 
+	itTextFieldMapping := bleve.NewTextFieldMapping()
+	itTextFieldMapping.Analyzer = "my_it"
+
+	enTextFieldMapping := bleve.NewTextFieldMapping()
+	enTextFieldMapping.Analyzer = "my_en"
+
+	genericTextFieldMapping := bleve.NewTextFieldMapping()
+	genericTextFieldMapping.Analyzer = "my_base"
+
 	docMapping := bleve.NewDocumentMapping()
 	docMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
-	docMapping.AddFieldMappingsAt("content", txtMapping)
-	docMapping.AddFieldMappingsAt("title", txtMapping)
+	docMapping.AddFieldMappingsAt("content", genericTextFieldMapping)
+	docMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
 	docMapping.AddFieldMappingsAt("data", storeFieldOnlyMapping)
-
-	mapping := bleve.NewIndexMapping()
 	mapping.AddDocumentMapping("doc", docMapping)
-	mapping.DefaultAnalyzer = language
+
+	itDocMapping := bleve.NewDocumentMapping()
+	itDocMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
+	itDocMapping.AddFieldMappingsAt("content", itTextFieldMapping)
+	itDocMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
+	itDocMapping.AddFieldMappingsAt("data", storeFieldOnlyMapping)
+	mapping.AddDocumentMapping("doc_it", itDocMapping)
+
+	enDocMapping := bleve.NewDocumentMapping()
+	enDocMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
+	enDocMapping.AddFieldMappingsAt("content", enTextFieldMapping)
+	enDocMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
+	enDocMapping.AddFieldMappingsAt("data", storeFieldOnlyMapping)
+	mapping.AddDocumentMapping("doc_en", enDocMapping)
+
+	mapping.DefaultAnalyzer = "my_base"
+	mapping.DefaultField = "content"
 	return mapping
 }
 
-func New(path, language string) (*Index, error) {
+func New(path string) (*Index, error) {
 	index, err := bleve.Open(path)
 	if err == bleve.ErrorIndexPathDoesNotExist {
-		indexMapping := buildIndexMapping(language)
+		indexMapping := buildIndexMapping()
 		index, err = bleve.New(path, indexMapping)
 		if err != nil {
 			return nil, err
@@ -65,10 +89,7 @@ type BleveDocument struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 	Data    string `json:"data"`
-}
-
-func (bd *BleveDocument) Type() string {
-	return "doc"
+	Type    string `json:"_type"`
 }
 
 func docToBleve(doc Document) (*BleveDocument, error) {
@@ -77,11 +98,23 @@ func docToBleve(doc Document) (*BleveDocument, error) {
 		return nil, err
 	}
 
+	var docType string
+	guessLang := cld2.Detect(doc.Content())
+	fmt.Printf("LANG of %s: %s\n", doc.Title(), guessLang)
+	if guessLang == "it" {
+		docType = "doc_it"
+	} else if guessLang == "en" {
+		docType = "doc_en"
+	} else {
+		docType = "doc"
+	}
+
 	return &BleveDocument{
 		Id:      doc.Id(),
 		Title:   doc.Title(),
 		Content: doc.Content(),
 		Data:    string(data),
+		Type:    docType,
 	}, nil
 }
 

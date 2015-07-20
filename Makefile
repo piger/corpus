@@ -1,11 +1,5 @@
-# Use libicu installation from homebrew
-ifeq ($(shell uname), Darwin)
-export CGO_LDFLAGS := -L/usr/local/opt/icu4c/lib 
-export CGO_CFLAGS := -I/usr/local/opt/icu4c/include
-endif
-
 GO_FILES := *.go cmd/corpus/corpus.go
-GO_FLAGS := -tags "libstemmer icu"
+GO_FLAGS := -tags "libstemmer"
 
 .PHONY: all install
 

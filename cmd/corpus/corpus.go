@@ -16,7 +16,6 @@ var (
 	doSearch   = flag.Bool("search", true, "Search for something (default)")
 	doIndex    = flag.Bool("index", false, "Index documents")
 	limit      = flag.Int("limit", 20, "Limit number of search results")
-	lang       = flag.String("lang", "en", "Language (for indexing)")
 	noScores   = flag.Bool("no-score", false, "Hide score in results")
 	highlights = flag.Bool("highlights", false, "Show highlights from search results")
 
@@ -117,7 +116,7 @@ func main() {
 		log.Fatal("Not enough arguments")
 	}
 
-	index, err := corpus.New(*dbPath, *lang)
+	index, err := corpus.New(*dbPath)
 	if err != nil {
 		log.Fatalf("Cannot open index directory: %s\n", err)
 	}
