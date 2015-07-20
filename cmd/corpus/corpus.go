@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"git.autistici.org/ale/corpus"
-	"git.autistici.org/ale/corpus/file"
+	"github.com/piger/corpus"
+	"github.com/piger/corpus/file"
 )
 
 var (
