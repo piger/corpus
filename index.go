@@ -63,7 +63,7 @@ func New(path, language string) (*Index, error) {
 type BleveDocument struct {
 	Id      string `json:"id"`
 	Title   string `json:"title"`
-	Content string `json:"title"`
+	Content string `json:"content"`
 	Data    string `json:"data"`
 }
 
