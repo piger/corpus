@@ -42,7 +42,7 @@ func runSearch(index *corpus.Index, args []string) {
 	// Execute query and display results.
 	results, err := index.Search(strings.Join(args, " "), 0, *limit)
 	if err != nil {
-		log.Fatal("Search error: %s\n", err)
+		log.Fatalf("Search error: %s\n", err)
 	} else if results.Total == 0 {
 		log.Printf("No results")
 		return
