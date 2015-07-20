@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/index/upside_down"
 	"github.com/rainycape/cld2"
 )
 
@@ -155,4 +156,16 @@ func (b *Index) Search(queryStr string, offset, limit int, highlights bool) (*bl
 // Close releases the resources associated with the index.
 func (b *Index) Close() {
 	b.index.Close()
+}
+
+func (b *Index) Dump() {
+	for rowOrErr := range b.index.DumpAll() {
+		switch rowOrErr := rowOrErr.(type) {
+		case error:
+			fmt.Printf("error dumping: %v\n", rowOrErr)
+		case upside_down.UpsideDownCouchRow:
+			fmt.Printf("%v\n", rowOrErr)
+			fmt.Printf("Key:   % -100x\nValue: % -100x\n\n", rowOrErr.Key(), rowOrErr.Value())
+		}
+	}
 }

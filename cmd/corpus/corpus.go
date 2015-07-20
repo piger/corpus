@@ -15,6 +15,7 @@ var (
 	dbPath     = flag.String("db", "./db", "Path to the index")
 	doSearch   = flag.Bool("search", true, "Search for something (default)")
 	doIndex    = flag.Bool("index", false, "Index documents")
+	doDump     = flag.Bool("dump", false, "Dump index database")
 	limit      = flag.Int("limit", 20, "Limit number of search results")
 	noScores   = flag.Bool("no-score", false, "Hide score in results")
 	highlights = flag.Bool("highlights", false, "Show highlights from search results")
@@ -124,6 +125,8 @@ func main() {
 
 	if *doIndex {
 		runIndex(index, flag.Args())
+	} else if *doDump {
+		index.Dump()
 	} else {
 		runSearch(index, flag.Args())
 	}
