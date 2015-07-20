@@ -40,7 +40,7 @@ func (s *strslice) Set(value string) error {
 
 func runSearch(index *corpus.Index, args []string) {
 	// Execute query and display results.
-	results, err := index.Search(strings.Join(args, " "), 0, *limit)
+	results, err := index.Search(strings.Join(args, " "), 0, *limit, *highlights)
 	if err != nil {
 		log.Fatalf("Search error: %s\n", err)
 	} else if results.Total == 0 {

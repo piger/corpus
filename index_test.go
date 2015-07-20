@@ -35,7 +35,7 @@ func Test_IndexAndSearch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	results, err := index.Search("three", 0, 100)
+	results, err := index.Search("three", 0, 100, false)
 	if err != nil {
 		t.Fatalf("Search error: %s\n", err)
 	} else if results.Total != 1 {
@@ -46,14 +46,14 @@ func Test_IndexAndSearch(t *testing.T) {
 		t.Errorf("bad result id: got=%s, want=id3", resultdoc.ID)
 	}
 
-	results, err = index.Search("banana", 0, 100)
+	results, err = index.Search("banana", 0, 100, false)
 	if err != nil {
 		t.Fatalf("Search error: %s\n", err)
 	} else if results.Total != 2 {
 		t.Fatalf("Found %d results for 'banana' instead of 1: %+v", results.Total, results)
 	}
 
-	results, err = index.Search("boiler", 0, 100)
+	results, err = index.Search("boiler", 0, 100, false)
 	if err != nil {
 		t.Fatalf("Search error: %s\n", err)
 	} else if results.Total != 0 {

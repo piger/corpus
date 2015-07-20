@@ -100,10 +100,12 @@ func (b *Index) Insert(docs []Document) error {
 	return b.index.Batch(batch)
 }
 
-func (b *Index) Search(queryStr string, offset, limit int) (*bleve.SearchResult, error) {
+func (b *Index) Search(queryStr string, offset, limit int, highlights bool) (*bleve.SearchResult, error) {
 	query := bleve.NewQueryStringQuery(queryStr)
 	req := bleve.NewSearchRequestOptions(query, limit, offset, false)
-	req.Highlight = bleve.NewHighlightWithStyle("ansi")
+	if highlights {
+		req.Highlight = bleve.NewHighlightWithStyle("ansi")
+	}
 	return b.index.Search(req)
 }
 
