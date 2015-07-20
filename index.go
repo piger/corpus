@@ -44,6 +44,7 @@ func buildIndexMapping() *bleve.IndexMapping {
 	genericTextFieldMapping.Analyzer = "my_base"
 
 	docMapping := bleve.NewDocumentMapping()
+	docMapping.DefaultAnalyzer = "my_base"
 	docMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
 	docMapping.AddFieldMappingsAt("content", genericTextFieldMapping)
 	docMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
@@ -51,6 +52,7 @@ func buildIndexMapping() *bleve.IndexMapping {
 	mapping.AddDocumentMapping("doc", docMapping)
 
 	itDocMapping := bleve.NewDocumentMapping()
+	itDocMapping.DefaultAnalyzer = "my_it"
 	itDocMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
 	itDocMapping.AddFieldMappingsAt("content", itTextFieldMapping)
 	itDocMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
@@ -58,13 +60,14 @@ func buildIndexMapping() *bleve.IndexMapping {
 	mapping.AddDocumentMapping("doc_it", itDocMapping)
 
 	enDocMapping := bleve.NewDocumentMapping()
+	enDocMapping.DefaultAnalyzer = "my_en"
 	enDocMapping.AddSubDocumentMapping("id", bleve.NewDocumentDisabledMapping())
 	enDocMapping.AddFieldMappingsAt("content", enTextFieldMapping)
 	enDocMapping.AddFieldMappingsAt("title", genericTextFieldMapping)
 	enDocMapping.AddFieldMappingsAt("data", storeFieldOnlyMapping)
 	mapping.AddDocumentMapping("doc_en", enDocMapping)
 
-	mapping.DefaultAnalyzer = "my_base"
+	// mapping.DefaultAnalyzer = "my_en"
 	mapping.DefaultField = "content"
 	return mapping
 }
@@ -93,6 +96,10 @@ type BleveDocument struct {
 	// this field was called "Type" but we need
 	// to respect the bleve.Classifier interface!
 	Kind string `json:"_type"`
+}
+
+func (bd *BleveDocument) Type() string {
+	return bd.Kind
 }
 
 func docToBleve(doc Document) (*BleveDocument, error) {
